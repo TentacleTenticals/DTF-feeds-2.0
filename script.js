@@ -3,10 +3,12 @@
 // @namespace   https://github.com/TentacleTenticals/DTF-feeds
 // @match       https://dtf.ru/*
 // @grant       none
-// @version     1.0
+// @version     1.0.1
 // @author      Tentacle Tenticals
 // @description Классы и функции
 // @homepage    https://github.com/TentacleTenticals/DTF-feeds
+// @updateURL   https://github.com/TentacleTenticals/DTF-feeds/raw/master/test.user.js
+// @downloadURL https://github.com/TentacleTenticals/DTF-feeds/raw/master/test.user.js
 // @license MIT
 // ==/UserScript==
 /* jshint esversion:8 */
@@ -875,7 +877,7 @@ class FeedGroups{
             if(!arr[i].querySelector(`div[class=content-container]`).children[0].classList.value.match(/content-title/)){
               console.log('BLOG NO TITLE!', arr[i]);
               if(mainSettings['feeds blogs title filter']['how to block blogs title'] === 'collapse'){
-                arr[i].classList.add('blogBlockedByNoTitle');
+                arr[i].classList.add('blogBlockedByNoTitle', 'collapsed');
               }else{
                 arr[i].remove();
                 console.log('Blog feed removed1', arr[i]);
@@ -890,7 +892,7 @@ class FeedGroups{
               if(arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim().match(blogsTitleFilter)){
                 console.log('Blogs title filter found item!', arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim());
                 if(mainSettings['feeds blogs title filter']['how to block blogs title'] === 'collapse'){
-                  arr[i].classList.add('blogBlockedByTitle');
+                  arr[i].classList.add('blogBlockedByTitle', 'collapsed');
                 }else{
                   arr[i].remove();
                   console.log('Blog feed removed2', arr[i]);
@@ -906,7 +908,7 @@ class FeedGroups{
             if(!arr[i].querySelector(`div[class=content-container] p`)){
               console.log('BLOG NO TEXT!', arr[i]);
               if(mainSettings['feeds blogs text filter']['how to block blogs text'] === 'collapse'){
-                arr[i].classList.add('blogBlockedByNoText');
+                arr[i].classList.add('blogBlockedByNoText', 'collapsed');
               }else{
                 arr[i].remove();
                 console.log('Blog feed removed1', arr[i]);
@@ -921,7 +923,7 @@ class FeedGroups{
               if(arr[i].querySelector(`div[class=content-container]`).textContent.trim().match(blogsTextFilter)){
                 console.log('Blogs text filter found item!');
                 if(mainSettings['feeds blogs text filter']['how to block blogs text'] === 'collapse'){
-                  arr[i].classList.add('blogBlockedByText');
+                  arr[i].classList.add('blogBlockedByText', 'collapsed');
                 }else{
                   arr[i].remove();
                   console.log('Blog feed removed1', arr[i]);
@@ -1057,7 +1059,7 @@ class FeedGroups{
                 if(!arr[i].querySelector(`div[class=content-container]`).children[0].classList.value.match(/content-title/)){
                   console.log('NO TITLE!', arr[i]);
                   if(mainSettings['feeds subsites title filter']['how to block subsites title'] === 'collapse'){
-                    arr[i].classList.add('subsiteBlockedByNoTitle');
+                    arr[i].classList.add('subsiteBlockedByNoTitle', 'collapsed');
                   }else{
                     arr[i].remove();
                     console.log('Subsite feed removed1', arr[i]);
@@ -1072,7 +1074,7 @@ class FeedGroups{
                   if(arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim().match(subsitesTitleFilter)){
                     console.log('Subsutes title filter found item!', arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim());
                     if(mainSettings['feeds subsites title filter']['how to block subsites title'] === 'collapse'){
-                      arr[i].classList.add('subsiteBlockedByTitle');
+                      arr[i].classList.add('subsiteBlockedByTitle', 'collapsed');
                     }else{
                       arr[i].remove();
                       console.log('Subsite feed removed2', arr[i]);
@@ -1087,7 +1089,7 @@ class FeedGroups{
                 if(!arr[i].querySelector(`div[class=content-container] p`)){
                   console.log('NO TEXT!', arr[i]);
                   if(mainSettings['feeds subsites text filter']['how to block subsites text'] === 'collapse'){
-                    arr[i].classList.add('subsiteBlockedByNoText');
+                    arr[i].classList.add('subsiteBlockedByNoText', 'collapsed');
                   }else{
                     arr[i].remove();
                     console.log('Subsite feed removed1', arr[i]);
@@ -1101,7 +1103,7 @@ class FeedGroups{
                   if(arr[i].querySelector(`div[class=content-container] p`).textContent.trim().match(subsitesTextFilter)){
                     console.log('Subsites text filter found item!', arr[i].querySelector(`div[class=content-container] p`).textContent.trim());
                     if(mainSettings['feeds subsites text filter']['how to block subsites text'] === 'collapse'){
-                      arr[i].classList.add('subsiteBlockedByText');
+                      arr[i].classList.add('subsiteBlockedByText', 'collapsed');
                     }else{
                       arr[i].remove();
                       console.log('Subsite feed removed2', arr[i]);
@@ -3330,31 +3332,6 @@ function mergeSettings(def, sav){
   max-height: 40px;
   overflow-y: hidden;
 }
-.dtf-feedGroups .feed__item.l-island-round.blogBlockedByNoTitle::after {
-  content: '⛔ Блог скрыт фильтром, нет заголовка ⛔';
-}
-.dtf-feedGroups .feed__item.l-island-round.blogBlockedByTitle::after {
-  content: '⛔ Блог скрыт фильтром, запрещённый текст в заголовке ⛔';
-}
-.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByNoTitle::after {
-  content: '⛔ Статья скрыта фильтром, нет заголовка ⛔';
-}
-.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByTitle::after {
-  content: '⛔ Статья скрыта фильтром, запрещённый текст в заголовке ⛔';
-}
-
-.dtf-feedGroups .feed__item.l-island-round.blogBlockedByNoText::after {
-  content: '⛔ Блог скрыт фильтром, нет текста ⛔';
-}
-.dtf-feedGroups .feed__item.l-island-round.blogBlockedByText::after {
-  content: '⛔ Блог скрыт фильтром, запрещённый текст ⛔';
-}
-.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByNoText::after {
-  content: '⛔ Статья скрыта фильтром, нет текста ⛔';
-}
-.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByText::after {
-  content: '⛔ Статья скрыта фильтром, запрещённый текст ⛔';
-}
 
 
 .dtf-feedGroups .feed__item.l-island-round.watchedFeed>:nth-child(1)::after {
@@ -3462,6 +3439,33 @@ function mergeSettings(def, sav){
 }
 .dtf-feed-group .subGroup.ignoredAuthor .title {
   color: rgb(195 112 154);
+}
+
+
+.dtf-feedGroups .feed__item.l-island-round.blogBlockedByNoTitle::after {
+  content: '⛔ Блог скрыт фильтром, нет заголовка ⛔';
+}
+.dtf-feedGroups .feed__item.l-island-round.blogBlockedByTitle::after {
+  content: '⛔ Блог скрыт фильтром, запрещённый текст в заголовке ⛔';
+}
+.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByNoTitle::after {
+  content: '⛔ Статья скрыта фильтром, нет заголовка ⛔';
+}
+.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByTitle::after {
+  content: '⛔ Статья скрыта фильтром, запрещённый текст в заголовке ⛔';
+}
+
+.dtf-feedGroups .feed__item.l-island-round.blogBlockedByNoText::after {
+  content: '⛔ Блог скрыт фильтром, нет текста ⛔';
+}
+.dtf-feedGroups .feed__item.l-island-round.blogBlockedByText::after {
+  content: '⛔ Блог скрыт фильтром, запрещённый текст ⛔';
+}
+.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByNoText::after {
+  content: '⛔ Статья скрыта фильтром, нет текста ⛔';
+}
+.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByText::after {
+  content: '⛔ Статья скрыта фильтром, запрещённый текст ⛔';
 }
 
 .layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2) .commentBlockedByLink {
