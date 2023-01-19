@@ -3,7 +3,7 @@
 // @namespace   https://github.com/TentacleTenticals/DTF-feeds
 // @match       https://dtf.ru/*
 // @grant       none
-// @version     1.0.1
+// @version     1.0.2
 // @author      Tentacle Tenticals
 // @description Классы и функции
 // @homepage    https://github.com/TentacleTenticals/DTF-feeds
@@ -127,10 +127,20 @@
       this.main.id='dtf-alert';
       document.getElementById('dtf-buttonsField').appendChild(this.main);
 
-      new Div({
+      this.header = new Div({
         path: this.main,
+        name: 'header',
+        rtn: true
+      });
+      new Div({
+        path: this.header,
         name: 'type',
         text: type
+      });
+      new Div({
+        path: this.header,
+        name: 'scriptName',
+        text: initCfg.name
       });
       new Div({
         path: this.main,
@@ -391,6 +401,14 @@ class FeedGroups{
 
             return `${t.getFullYear()}/${t.getMonth()+1 < 10 ? `0${t.getMonth()+1}` : t.getMonth()+1}/${t.getDate() < 10 ? `0${t.getDate()}` : t.getDate()} ${t.getHours() < 10 ? `0${t.getHours()}` : t.getHours()}:${t.getMinutes() < 10 ? `0${t.getMinutes()}` : t.getMinutes()}:${t.getSeconds() < 10 ? `0${t.getSeconds()}` : t.getSeconds()}`
           }
+          if(mainSettings.data['ignored feeds'].find(i => i.feedID === feedID)){
+            new Alert({
+              type: 'Добавление итема',
+              text: 'Вы не можете добавить фид в просмотренные, т.к фид игнорируется вами',
+              timer: 5000
+            })
+            return;
+          }
           // if(e.target.parentNode.parentNode.parentNode.parentNode.classList.value.match(/collapsed/)) e.target.parentNode.parentNode.parentNode.parentNode.classList.remove('collapsed');
           mainSettings.data['watched feeds'].find(i => i.feedID === feedID) ? (mainSettings.data['watched feeds'] = mainSettings.data['watched feeds'].filter(i => i.feedID !== feedID)) : mainSettings.data['watched feeds'].push({
             feedID:feedID,
@@ -455,6 +473,14 @@ class FeedGroups{
 
             return `${t.getFullYear()}/${t.getMonth()+1 < 10 ? `0${t.getMonth()+1}` : t.getMonth()+1}/${t.getDate() < 10 ? `0${t.getDate()}` : t.getDate()} ${t.getHours() < 10 ? `0${t.getHours()}` : t.getHours()}:${t.getMinutes() < 10 ? `0${t.getMinutes()}` : t.getMinutes()}:${t.getSeconds() < 10 ? `0${t.getSeconds()}` : t.getSeconds()}`
           }
+          if(mainSettings.data['watched feeds'].find(i => i.feedID === feedID)){
+            new Alert({
+              type: 'Добавление итема',
+              text: 'Вы не можете добавить фид в игнорируемые, т.к фид просмотрен вами',
+              timer: 5000
+            })
+            return;
+          }
           // if(e.target.parentNode.parentNode.parentNode.parentNode.classList.value.match(/collapsed/)) e.target.parentNode.parentNode.parentNode.parentNode.classList.remove('collapsed');
           mainSettings.data['ignored feeds'].find(i => i.feedID === feedID) ? (mainSettings.data['ignored feeds'] = mainSettings.data['ignored feeds'].filter(i => i.feedID !== feedID)) : mainSettings.data['ignored feeds'].push({
             feedID:feedID,
@@ -493,6 +519,7 @@ class FeedGroups{
             onclick: (e) => {
               let info = e.target.parentNode.parentNode.parentNode.parentNode.children[0];
               let userIDFilter = /https:\/\/dtf\.ru\/(u|s)\/(\d+)-[^]+/;
+              let authorID = info.children.length <= 2 ? info.children[0].children[0].href.replace(userIDFilter, '$1') : info.children[1].children[0].href.replace(userIDFilter, '$1');
               function getInfo(target){
                 let filter = /https:\/\/dtf\.ru\/(u\/|s\/|[^/]{2,})(\d*)-{0,1}([^]*)/gm;
                 let o;
@@ -516,9 +543,16 @@ class FeedGroups{
                 })
                 return o;
               }
+              if(mainSettings.data['ignored authors'].find(i => i.authorID === authorID)){
+                new Alert({
+                  type: 'Добавление итема',
+                  text: 'Вы не можете добавить автора в избранные, т.к автор игнорируется вами',
+                  timer: 5000
+                })
+                return;
+              }
               // if(e.target.parentNode.parentNode.parentNode.parentNode.classList.value.match(/favorite/)) return;
               info.parentNode.parentNode.parentNode.classList.toggle('favoriteAuthor');
-              let authorID = info.children.length <= 2 ? info.children[0].children[0].href.replace(userIDFilter, '$1') : info.children[1].children[0].href.replace(userIDFilter, '$1');
               // console.log(userID);
               mainSettings.data['favorite authors'].find(i => i.authorID === authorID) ? (mainSettings.data['favorite authors'] = mainSettings.data['favorite authors'].filter(i => i.authorID !== authorID)) : mainSettings.data['favorite authors'].push(
                 info.children.length <= 2 ? {
@@ -544,6 +578,7 @@ class FeedGroups{
             onclick: (e) => {
               let info = e.target.parentNode.parentNode.parentNode.parentNode.children[0];
               let userIDFilter = /https:\/\/dtf\.ru\/(u|s)\/(\d+)-[^]+/;
+              let authorID = info.children.length <= 2 ? info.children[0].children[0].href.replace(userIDFilter, '$1') : info.children[1].children[0].href.replace(userIDFilter, '$1');
               function getInfo(target){
                 let filter = /https:\/\/dtf\.ru\/(u\/|s\/|[^/]{2,})(\d*)-{0,1}([^]*)/gm;
                 let o;
@@ -567,10 +602,17 @@ class FeedGroups{
                 })
                 return o;
               }
+              if(mainSettings.data['favorite authors'].find(i => i.authorID === authorID)){
+                new Alert({
+                  type: 'Добавление итема',
+                  text: 'Вы не можете добавить автора в игнорируемые, т.к автор избранный вами',
+                  timer: 5000
+                })
+                return;
+              }
               // if(e.target.parentNode.parentNode.parentNode.parentNode.classList.value.match(/favorite/)) return;
               info.parentNode.parentNode.parentNode.classList.toggle('ignoredAuthor');
               info.parentNode.parentNode.parentNode.classList.toggle('collapsed');
-              let authorID = info.children.length <= 2 ? info.children[0].children[0].href.replace(userIDFilter, '$1') : info.children[1].children[0].href.replace(userIDFilter, '$1');
               // console.log(userID);
               mainSettings.data['ignored authors'].find(i => i.authorID === authorID) ? (mainSettings.data['ignored authors'] = mainSettings.data['ignored authors'].filter(i => i.authorID !== authorID)) : mainSettings.data['ignored authors'].push(
                 info.children.length <= 2 ? {
@@ -605,6 +647,7 @@ class FeedGroups{
               let info = e.target.parentNode.parentNode.parentNode.parentNode.children[0];
               if(info.children.length <= 2) return;
               let userIDFilter = /https:\/\/dtf\.ru\/(u|s)\/(\d+)-[^]+/;
+              let authorID = info.children.length <= 2 ? info.children[0].children[0].href.replace(userIDFilter, '$1') : info.children[1].children[0].href.replace(userIDFilter, '$1');
               function getInfo(target){
                 let filter = /https:\/\/dtf\.ru\/(u\/|s\/|[^/]{2,})(\d*)-{0,1}([^]*)/gm;
                 let o;
@@ -628,9 +671,16 @@ class FeedGroups{
                 })
                 return o;
               }
+              if(mainSettings.data['ignored subsite'].find(i => i.authorID === authorID)){
+                new Alert({
+                  type: 'Добавление итема',
+                  text: 'Вы не можете добавить подсайт в избранные, т.к подсайт игнорируемый вами',
+                  timer: 5000
+                })
+                return;
+              }
               // if(e.target.parentNode.parentNode.parentNode.parentNode.classList.value.match(/favorite/)) return;
               info.parentNode.parentNode.parentNode.classList.toggle('favoriteSubsite');
-              let authorID = info.children.length <= 2 ? info.children[0].children[0].href.replace(userIDFilter, '$1') : info.children[1].children[0].href.replace(userIDFilter, '$1');
               // console.log(userID);
               mainSettings.data['favorite subsites'].find(i => i.authorID === authorID) ? (mainSettings.data['favorite subsites'] = mainSettings.data['favorite subsites'].filter(i => i.authorID !== authorID)) : mainSettings.data['favorite subsites'].push(
                 {
@@ -653,6 +703,7 @@ class FeedGroups{
               let info = e.target.parentNode.parentNode.parentNode.parentNode.children[0];
               if(info.children.length <= 2) return;
               let userIDFilter = /https:\/\/dtf\.ru\/(u|s)\/(\d+)-[^]+/;
+              let authorID = info.children.length <= 2 ? info.children[0].children[0].href.replace(userIDFilter, '$1') : info.children[1].children[0].href.replace(userIDFilter, '$1');
               function getInfo(target){
                 let filter = /https:\/\/dtf\.ru\/(u\/|s\/|[^/]{2,})(\d*)-{0,1}([^]*)/gm;
                 let o;
@@ -676,10 +727,17 @@ class FeedGroups{
                 })
                 return o;
               }
+              if(mainSettings.data['favorite subsites'].find(i => i.authorID === authorID)){
+                new Alert({
+                  type: 'Добавление итема',
+                  text: 'Вы не можете добавить подсайт в игнорируемые, т.к подсайт избранный для вас',
+                  timer: 5000
+                })
+                return;
+              }
               // if(e.target.parentNode.parentNode.parentNode.parentNode.classList.value.match(/favorite/)) return;
               info.parentNode.parentNode.parentNode.classList.toggle('ignoredSubsite');
               info.parentNode.parentNode.parentNode.classList.toggle('collapsed');
-              let authorID = info.children.length <= 2 ? info.children[0].children[0].href.replace(userIDFilter, '$1') : info.children[1].children[0].href.replace(userIDFilter, '$1');
               // console.log(userID);
               mainSettings.data['ignored subsites'].find(i => i.authorID === authorID) ? (mainSettings.data['ignored subsites'] = mainSettings.data['ignored subsites'].filter(i => i.authorID !== authorID)) : mainSettings.data['ignored subsites'].push(
                 {
@@ -877,7 +935,7 @@ class FeedGroups{
             if(!arr[i].querySelector(`div[class=content-container]`).children[0].classList.value.match(/content-title/)){
               console.log('BLOG NO TITLE!', arr[i]);
               if(mainSettings['feeds blogs title filter']['how to block blogs title'] === 'collapse'){
-                arr[i].classList.add('blogBlockedByNoTitle', 'collapsed');
+                arr[i].classList.add('blogBlockedNoTitle', 'collapsed');
               }else{
                 arr[i].remove();
                 console.log('Blog feed removed1', arr[i]);
@@ -885,14 +943,14 @@ class FeedGroups{
               }
             }
           }
-          if(mainSettings['feeds blogs title filter']['block with text in title'] && blogsTitleFilter){
+          if(mainSettings['feeds blogs title filter']['block with some text'] && blogsTitleFilter){
             // let blogsTitleFilter = new RegExp(mainSettings['feeds blogs title filter']['words'].join('|'), 'mi');
             if(arr[i].querySelector(`div[class=content-container]`).children[0].classList.value.match(/content-title/)){
               console.log('Title: ', arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim());
               if(arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim().match(blogsTitleFilter)){
                 console.log('Blogs title filter found item!', arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim());
                 if(mainSettings['feeds blogs title filter']['how to block blogs title'] === 'collapse'){
-                  arr[i].classList.add('blogBlockedByTitle', 'collapsed');
+                  arr[i].classList.add('blogBlockedTitle', 'collapsed');
                 }else{
                   arr[i].remove();
                   console.log('Blog feed removed2', arr[i]);
@@ -908,7 +966,7 @@ class FeedGroups{
             if(!arr[i].querySelector(`div[class=content-container] p`)){
               console.log('BLOG NO TEXT!', arr[i]);
               if(mainSettings['feeds blogs text filter']['how to block blogs text'] === 'collapse'){
-                arr[i].classList.add('blogBlockedByNoText', 'collapsed');
+                arr[i].classList.add('blogBlockedNoText', 'collapsed');
               }else{
                 arr[i].remove();
                 console.log('Blog feed removed1', arr[i]);
@@ -923,7 +981,7 @@ class FeedGroups{
               if(arr[i].querySelector(`div[class=content-container]`).textContent.trim().match(blogsTextFilter)){
                 console.log('Blogs text filter found item!');
                 if(mainSettings['feeds blogs text filter']['how to block blogs text'] === 'collapse'){
-                  arr[i].classList.add('blogBlockedByText', 'collapsed');
+                  arr[i].classList.add('blogBlockedText', 'collapsed');
                 }else{
                   arr[i].remove();
                   console.log('Blog feed removed1', arr[i]);
@@ -1059,7 +1117,7 @@ class FeedGroups{
                 if(!arr[i].querySelector(`div[class=content-container]`).children[0].classList.value.match(/content-title/)){
                   console.log('NO TITLE!', arr[i]);
                   if(mainSettings['feeds subsites title filter']['how to block subsites title'] === 'collapse'){
-                    arr[i].classList.add('subsiteBlockedByNoTitle', 'collapsed');
+                    arr[i].classList.add('subsiteBlockedNoTitle', 'collapsed');
                   }else{
                     arr[i].remove();
                     console.log('Subsite feed removed1', arr[i]);
@@ -1067,14 +1125,14 @@ class FeedGroups{
                   }
                 }
               }
-              if(mainSettings['feeds subsites title filter']['block with text in title'] && subsitesTitleFilter){
+              if(mainSettings['feeds subsites title filter']['block with some text'] && subsitesTitleFilter){
                 // let subsitesTitleFilter = new RegExp(mainSettings['feeds subsites title filter']['words'].join('|'), 'mi');
                 if(arr[i].querySelector(`div[class=content-container]`).children[0].classList.value.match(/content-title/)){
                   console.log('Title: ', arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim());
                   if(arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim().match(subsitesTitleFilter)){
                     console.log('Subsutes title filter found item!', arr[i].querySelector(`div[class=content-container]`).children[0].textContent.trim());
                     if(mainSettings['feeds subsites title filter']['how to block subsites title'] === 'collapse'){
-                      arr[i].classList.add('subsiteBlockedByTitle', 'collapsed');
+                      arr[i].classList.add('subsiteBlockedTitle', 'collapsed');
                     }else{
                       arr[i].remove();
                       console.log('Subsite feed removed2', arr[i]);
@@ -1089,7 +1147,7 @@ class FeedGroups{
                 if(!arr[i].querySelector(`div[class=content-container] p`)){
                   console.log('NO TEXT!', arr[i]);
                   if(mainSettings['feeds subsites text filter']['how to block subsites text'] === 'collapse'){
-                    arr[i].classList.add('subsiteBlockedByNoText', 'collapsed');
+                    arr[i].classList.add('subsiteBlockedNoText', 'collapsed');
                   }else{
                     arr[i].remove();
                     console.log('Subsite feed removed1', arr[i]);
@@ -1103,7 +1161,7 @@ class FeedGroups{
                   if(arr[i].querySelector(`div[class=content-container] p`).textContent.trim().match(subsitesTextFilter)){
                     console.log('Subsites text filter found item!', arr[i].querySelector(`div[class=content-container] p`).textContent.trim());
                     if(mainSettings['feeds subsites text filter']['how to block subsites text'] === 'collapse'){
-                      arr[i].classList.add('subsiteBlockedByText', 'collapsed');
+                      arr[i].classList.add('subsiteBlockedText', 'collapsed');
                     }else{
                       arr[i].remove();
                       console.log('Subsite feed removed2', arr[i]);
@@ -1534,33 +1592,38 @@ let style = `
   display: block;
   position: relative;
   top: 75px;
-  right: calc(-100% + 250px);
-  width: 240px;
-  min-height: 100px;
+  right: calc(-100% + 300px);
+  width: 290px;
+  min-height: 60px;
   height: max-content;
   margin: 0px 15px 0px 0px;
   box-shadow: 0px 0px 3px 1px rgb(0 0 0);
   padding: 3px;
-  animation-duration: 3s;
+  animation-duration: 2s;
   animation-delay: 0s;
   animation-iteration-count: 1;
   animation-direction: alternate;
   animation-name: slideIn;
   opacity: 0.9;
 }
+.dtf-buttonsField .dtf-alert .header {
+  display: flex;
+  justify-content: space-between;
+  overflow-x: hidden;
+}
 .dtf-buttonsField .dtf-alert.hide {
   right: -101%;
-  animation-duration: 3s;
+  animation-duration: 2s;
   animation-delay: 0s;
   animation-iteration-count: 1;
   animation-direction: alternate;
   animation-name: slideOut;
 }
-.dtf-buttonsField .dtf-alert .type {
+.dtf-buttonsField .dtf-alert :is(.type, .scriptName) {
   width: max-content;
   font-size: 13px;
   font-weight: 600;
-  padding: 0px 0px 0px 2px;
+  padding: 0px 2px 0px 2px;
   border-radius: 3px;
 }
 
@@ -1589,12 +1652,12 @@ let style = `
     right: -101%;
   }
   to {
-    right: calc(-101% + 250px);
+    right: calc(-101% + 300px);
   }
 }
 @keyframes slideOut {
   from {
-    right: calc(-101% + 250px);
+    right: calc(-101% + 300px);
   }
   to {
     right: -101%;
@@ -2160,7 +2223,7 @@ class SettingsItem{
               path: field,
               cName: 'itemsList view hor',
               name: name,
-              returnE: true,
+              rtn: true,
               valueName: 'string',
               editable: false,
               buttons: buttons,
@@ -2543,7 +2606,7 @@ class Field{
   }
 };
 class Ul{
-  constructor({path, name, cName, valueName, text, returnE, view, editable, buttons, target, format, onkeydown, onblur}){
+  constructor({path, name, cName, valueName, text, rtn, view, editable, buttons, target, format, onkeydown, onblur}){
     this.main=document.createElement('div');
     path.appendChild(this.main);
 
@@ -2579,7 +2642,7 @@ class Ul{
     this.inputName.className='input-label';
     text ? this.inputName.textContent=text : '';
     this.main.appendChild(this.inputName);
-    if(returnE) return this.main;
+    if(rtn) return this.main;
   }
 }
 class Li{
@@ -2634,7 +2697,7 @@ class Li{
 
     if(buttons) buttons(new Div({
       path: this.main,
-      returnE: true,
+      rtn: true,
       name: 'btnCont'
     }), value);
 
@@ -3006,11 +3069,11 @@ function mergeSettings(def, sav){
     }
   }
   console.log(`[Settings merge] Настройки успешно совмещены`);
-  new Alert({
-    type: 'Settings merge',
-    text: 'Настройки успешно обновлены!',
-    timer: 1000
-  })
+  // new Alert({
+  //   type: 'Settings merge',
+  //   text: 'Настройки успешно обновлены!',
+  //   timer: 1000
+  // })
   return tg;
 };
 
@@ -3037,7 +3100,13 @@ function mergeSettings(def, sav){
 }
 
 .dtf-feedGrous:not(.obs) {
+  width: 700px;
+  margin: 0px 0px 0px -25px;
   box-shadow: 0px 0px 2px 0px rgb(0 0 0);
+}
+
+.dtf-feedGroups.obs {
+  row-gap: 15px;
 }
 
 .dtf-feedGroups.obs .feed__item {
@@ -3079,14 +3148,6 @@ function mergeSettings(def, sav){
   overscroll-behavior: contain;
 }
 
-
-.dtf-feedGroups {
-  width: 700px;
-  margin: 0px 0px 0px -25px;
-}
-.dtf-feedGroups.obs {
-  row-gap: 15px;
-}
 .dtf-feedGroups .dtf-feed-group :is(.groupHeader, .panel) {
   width: 100%;
   color: white;
@@ -3442,29 +3503,29 @@ function mergeSettings(def, sav){
 }
 
 
-.dtf-feedGroups .feed__item.l-island-round.blogBlockedByNoTitle::after {
+.dtf-feedGroups .feed__item.l-island-round.blogBlockedNoTitle::after {
   content: '⛔ Блог скрыт фильтром, нет заголовка ⛔';
 }
-.dtf-feedGroups .feed__item.l-island-round.blogBlockedByTitle::after {
+.dtf-feedGroups .feed__item.l-island-round.blogBlockedTitle::after {
   content: '⛔ Блог скрыт фильтром, запрещённый текст в заголовке ⛔';
 }
-.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByNoTitle::after {
+.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedNoTitle::after {
   content: '⛔ Статья скрыта фильтром, нет заголовка ⛔';
 }
-.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByTitle::after {
+.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedTitle::after {
   content: '⛔ Статья скрыта фильтром, запрещённый текст в заголовке ⛔';
 }
 
-.dtf-feedGroups .feed__item.l-island-round.blogBlockedByNoText::after {
+.dtf-feedGroups .feed__item.l-island-round.blogBlockedNoText::after {
   content: '⛔ Блог скрыт фильтром, нет текста ⛔';
 }
-.dtf-feedGroups .feed__item.l-island-round.blogBlockedByText::after {
+.dtf-feedGroups .feed__item.l-island-round.blogBlockedText::after {
   content: '⛔ Блог скрыт фильтром, запрещённый текст ⛔';
 }
-.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByNoText::after {
+.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedNoText::after {
   content: '⛔ Статья скрыта фильтром, нет текста ⛔';
 }
-.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedByText::after {
+.dtf-feedGroups .feed__item.l-island-round.subsiteBlockedText::after {
   content: '⛔ Статья скрыта фильтром, запрещённый текст ⛔';
 }
 
@@ -4469,39 +4530,61 @@ function mergeSettings(def, sav){
     });
   }
   function getPageType(url){
-    let filter = /https:\/\/dtf\.ru\/(u\/|s\/|new$|popular$|my\/new$|[^/]{2,})(\d*)-{0,1}([^]*)/gm;
-    let o;
-    url.replace(filter, (d, type, id, username) => {
-      if(type.match(/u\//) && id && username){
-        // console.log('User page');
-        o = 'user pages';
-      }else
-      if(type.match(/s\//) && !id && username){
-        // console.log('Official subsite');
-        o = 'subsites';
+    return url.replace(/https:\/\/dtf\.ru\/([^]+)/, (d, text) => {
+      let arr = text.split('/');
+
+      if(arr[0] && arr[0].match(/^popular$/)){
+        if(!arr[1]) {
+          // console.log('Popular');
+          return 'popular';
+        }
       }
-      if(type.match(/s\//) && id && username){
-        // console.log('User subsite');
-        o = 'subsites';
-      }else
-      if(type.match(/^new$/)){
-        // console.log('New');
-        o = 'new';
-      }else
-      if(type.match(/^popular$/)){
-        // console.log('Popular');
-        o = 'popular';
-      }else
-      if(type.match(/^my\/new$/)){
-        // console.log('My feed');
-        o = 'my new';
-      }else
-      if(!type.match(/u\/|s\//) && !id && !username){
-        // console.log('DTF subsite');
-        o = 'subsites';
+
+      if(arr[0] && arr[0].match(/^new$/)){
+        if(!arr[1]) {
+          // console.log('Popular');
+          return 'new';
+        }
+      }
+
+      if(arr[0] && arr[0].match(/^my$/)){
+        if(arr[1] && arr[1].match(/^new$/)) {
+          // console.log('Popular');
+          return 'my new';
+        }
+      }
+
+      if(arr[0] && arr[0].match(/^u$/)){
+        if(arr[1] && !arr[2]) {
+          // console.log('User');
+          return 'user pages';
+        }
+        if(arr[1] && arr[2]) {
+          // console.log('User blog');
+          return 'topics';
+        }
+      }
+      if(arr[0] && arr[0].match(/^s$/)){
+        if(arr[1] && !arr[2]) {
+          // console.log('Subsite');
+          return 'subsites';
+        }
+        if(arr[1] && arr[2]) {
+          // console.log('Subsite topic');
+          return 'topics';
+        }
+      }
+      if(arr[0] && !arr[0].match(/^(u|s)$/)){
+        if(arr[0] && !arr[1]) {
+          // console.log('DTF subsite');
+          return 'subsites';
+        }
+        if(arr[0] && arr[1]) {
+          // console.log('DTF subsite Topic');
+          return 'topics';
+        }
       }
     })
-    return o;
   }
 
   // Запуск функций при загрузке страниц DTF
@@ -4512,6 +4595,7 @@ function mergeSettings(def, sav){
       settingsLoader(db, initCfg);
     }else
     if(mainSettings){
+      console.log('ALDUIN');
       if(mainSettings['where to react'][getPageType(document.location.href)]){
       // if(document.location.href.match(filterBuilder())){
         if(mainSettings['working mode']['type'].match(/panel$/)){
