@@ -3,9 +3,9 @@
 // @namespace   https://github.com/TentacleTenticals/DTF-feeds
 // @match       https://dtf.ru/*
 // @grant       none
-// @version     1.0.2
+// @version     1.0.3
 // @author      Tentacle Tenticals
-// @description Классы и функции
+// @description Скрипт для управления DTF фидами
 // @homepage    https://github.com/TentacleTenticals/DTF-feeds
 // @updateURL   https://github.com/TentacleTenticals/DTF-feeds/raw/master/test.user.js
 // @downloadURL https://github.com/TentacleTenticals/DTF-feeds/raw/master/test.user.js
@@ -15,31 +15,38 @@
 
 (() => {
   let obs = {};
-  function observer({target, mode, check, type, search, msg, func}){
+  function observer({target, cfg, mode, check, type, search, name, msg, func}){
     if(!target) return;
-    let o;
-    const callback = (mutationList, o) => {
-      for(const mutation of mutationList){
-        if(mutation.type === 'childList'){
-          // console.log(mutation.target);
-          if(check){
-            if(!mutation.target.classList.length > 0) return;
-            if(!mutation.target.classList.value.match(search)) return;
-          }
-          if(type){
-            func(mutation.target);
-          }else{
-            for(let i = 0, arr = mutation.addedNodes; i < arr.length; i++){
-              func(arr[i]);
+    if(mode === 'start'){
+      const callback = (mutationList, o) => {
+        for(const mutation of mutationList){
+          if(mutation.type === 'childList'){
+            // console.log(mutation.target);
+            if(check){
+              if(!mutation.target.classList.length > 0) return;
+              if(!mutation.target.classList.value.match(search)) return;
+            }
+            if(type){
+              func(mutation.target);
+            }else{
+              for(let i = 0, arr = mutation.addedNodes; i < arr.length; i++){
+                func(arr[i]);
+              }
             }
           }
         }
+      };
+      obs[name] = new MutationObserver(callback);
+      obs[name].observe(target, cfg);
+      console.log(`[OBS ${name}] запущен`);
+    }else
+    if(mode === 'restart'){
+      if(obs[name]){
+        obs[name].disconnect();
+        obs[name].observe(target, cfg);
+        console.log(`[OBS ${name}] перезапущен`);
       }
-    };
-    o = new MutationObserver(callback);
-    o.observe(target, mode ? mode : {attributes: false, childList: true, subtree: false, characterData: false});
-    console.log(msg);
-    return o;
+    }
   };
   function backupSettingsToFile(data, filename, type) {
     let file = new Blob([data], {type: type});
@@ -228,6 +235,7 @@ class FeedGroups{
       if(document.getElementById('dtf-feedGroups')) return;
       this.main=document.createElement('div');
       mainSettings['working mode']['type'].match(/obs$/) ? this.main.className='dtf-feedGroups obs' : this.main.className='dtf-feedGroups';
+      // mainSettings['working mode']['type'].match(/mid/) ? this.main.className='dtf-feedGroups mid' : this.main.className='dtf-feedGroups';
       this.main.id='dtf-feedGroups';
       document.querySelector(`div[id=page_wrapper] div[class=feed] div[class=feed__container]`).insertBefore(this.main, document.querySelector(`div[id=page_wrapper] div[class=feed] div[class=feed__container]`).children[0]);
     }
@@ -690,7 +698,7 @@ class FeedGroups{
                 }
               );
               settingsUpdater(db, mainSettings, {firstRun: false});
-              // if(mainSettings['working mode']['type'].match(/panel$/) && mainSettings['what to group']['subsites'] && info.children.length <= 2) info.parentNode.parentNode.parentNode.parentNode.parentNode.classList.add('favoriteSubsite');
+              if(mainSettings['working mode']['type'] === 'panel' && mainSettings['what to group']['subsites'] && info.children.length <= 2) info.parentNode.parentNode.parentNode.parentNode.parentNode.classList.add('favoriteSubsite');
             }
           })
 
@@ -998,7 +1006,7 @@ class FeedGroups{
       }
         new FeedActions(arr[i].querySelector(`div[class=content-header__info]`), arr[i]);
         // document.getElementById('dtf-feedGroups').children[2].children[1].appendChild(arr[i]);
-        if(mainSettings['working mode']['type'].match(/panel$/)){
+        if(mainSettings['working mode']['type'].match(/panel|mid/)){
           if(mainSettings['what to group']['blogs']){
             new SubGroup(
               document.getElementById('dtf-feedGroups').children[2].children[1],
@@ -1025,7 +1033,7 @@ class FeedGroups{
             document.getElementById('dtf-feedGroups').children[2].children[1].appendChild(arr[i]);
           }
         }else
-        if(mainSettings['working mode']['type'].match(/obs$/)){
+        if(mainSettings['working mode']['type'] === 'obs'){
           document.getElementById('dtf-feedGroups').appendChild(arr[i]);
           if(mainSettings.data['favorite authors'].find(a => a.authorID === arr[i].querySelector(`div[class*=content-header-author--subsite]`).children[0].href.replace(/[^\d]+(\d+)[^]+/, '$1'))){
             console.log('I see favorite!');
@@ -1178,7 +1186,7 @@ class FeedGroups{
           }
 
           new FeedActions(arr[i].querySelector(`div[class=content-header__info]`), arr[i]);
-          if(mainSettings['working mode']['type'].match(/panel$/)){
+          if(mainSettings['working mode']['type'].match(/panel$|mid/)){
             if(mainSettings['what to group']['subsites']){
               new SubGroup(
                 document.getElementById('dtf-feedGroups').children[1].children[1],
@@ -1193,7 +1201,7 @@ class FeedGroups{
               document.getElementById('dtf-feedGroups').children[1].children[1].appendChild(arr[i]);
             }
           }else
-          if(mainSettings['working mode']['type'].match(/obs$/)){
+          if(mainSettings['working mode']['type'] === 'obs'){
             document.getElementById('dtf-feedGroups').appendChild(arr[i]);
           }
           // console.log(arr[i].querySelector(`div[class=content-header__info]`).children[0].children[0].children[1].textContent);
@@ -1204,7 +1212,7 @@ class FeedGroups{
         }
         // if(co[d].classList.value.match(/content-header-author/)) console.log(co[d])
       }
-      if(mainSettings['working mode']['type'].match(/panel$/)){
+      if(mainSettings['working mode']['type'].match(/panel$|mid/)){
         document.getElementById('dtf-feedGroups').children[1].children[0].children[1].textContent = document.getElementById('dtf-feedGroups').children[1].children[1].children.length;
         document.getElementById('dtf-feedGroups').children[2].children[0].children[1].textContent = document.getElementById('dtf-feedGroups').children[2].children[1].children.length;
       }
@@ -1477,7 +1485,7 @@ let defaultSettings = {
   ['working mode']: {
     ['type']: 'obs'
   },
-  ['obs comments']: {
+  ['obs comments panel']: {
     ['is active']: false,
     ['block links']: false,
     ['block text']: false,
@@ -1728,11 +1736,15 @@ let style = `
 }
 .DTF-scriptSettingsOpener:hover .list,
 .DTF-scriptSettingsOpener .list:hover {
-  display: block;
+  display: flex;
+  flex-direction: column;
   background: rgb(255,255,255);
   margin-top: 3px;
-  padding: 1px 3px 3px 3px;
+  padding: 3px 3px 3px 3px;
   box-shadow: 0px 0px 2px 1px rgb(0 0 0);
+}
+.DTF-scriptSettingsOpener .list .main {
+  width: 100%;
 }
 .DTF-scriptSettingsOpener .list button {
   background: rgb(216 234 249);
@@ -1789,11 +1801,11 @@ let style = `
   padding: 5px 0px 0px;
 }
 .DTF-scriptSettingsOpener .container {
-  display: grid;
+  display: flex;
   flex-direction: row;
-  grid-template-columns: repeat(3, auto);
-  column-gap: 5px;
+  gap: 3px 5px;
 }
+
 :is(.DTF-scriptSettings, .DTF-scriptInfo, .DTF-scriptData) .header button {
   display: inline-block;
   font-size: 12px;
@@ -1810,7 +1822,7 @@ let style = `
   background-color: rgb(0 0 0);
   color: rgb(255 255 255);
   font-size: 14px;
-  padding: 2px 3px 2px 3px;
+  padding: 0px 3px 0px 3px;
   box-shadow: black 0px 0px 2px 0px;
   cursor: pointer;
   border: 1px solid rgb(255 255 255);
@@ -2066,6 +2078,7 @@ class SettingsItem{
     new Button({
       path: this.main,
       text: name,
+      name: 'main',
       onclick: () => {
         new Settings(params);
       }
@@ -3314,6 +3327,10 @@ function mergeSettings(def, sav){
   color: red;
 }
 
+.dtf-feedGroups .feed__item .content-header {
+  height: 45px;
+}
+
 .dtf-feedGroups .feed__item.l-island-round.collapsed {
   position: relative;
   box-shadow: 0px 0px 3px 1px rgb(0 0 0);
@@ -3387,10 +3404,17 @@ function mergeSettings(def, sav){
   z-index: 0;
 }
 
+.dtf-feedGroups :is(.blogBlockedNoTitle, .blogBlockedTitle, .subsiteBlockedNoTitle, .subsiteBlockedTitle)::after {
+  display: block;
+  text-align: center !important;
+  color: rgb(108 108 108);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .dtf-feedGroups .feed__item.l-island-round:is(.collapsed),
 .feed__item.l-island-round:is(.collapsed)>div {
-  min-height: 40px;
-  max-height: 40px;
+  height: 45px;
   overflow-y: hidden;
 }
 
@@ -3529,8 +3553,14 @@ function mergeSettings(def, sav){
   content: '⛔ Статья скрыта фильтром, запрещённый текст ⛔';
 }
 
-.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2) .commentBlockedByLink {
+.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2) .commentBlockedLink {
   background-color: rgb(0 0 0);
+  border-radius: 3px;
+}
+.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2) .commentBlockedText {
+  border-radius: 3px;
+  font-size: 0px;
+  display: none;
 }
 
 .dtf-feedGroups .dtf-menuButton {
@@ -3569,6 +3599,86 @@ function mergeSettings(def, sav){
 }
 `);
 
+  function obsFeeds(mode){
+    observer({
+      target: document.querySelector(`div[class=feed] div[class=feed__container]`),
+      check: true,
+      search: /feed__container/,
+      name: 'feeds',
+      mode: mode,
+      cfg: {attributes: false, childList: true, subtree: false, characterData: false},
+      func: (item) => {
+        // console.log('OBS ', item);
+        if(!item.classList.value > 0) return;
+        if(item.classList.value.match(/feed__chunk/)){
+          feedsSearch();
+        }
+      }
+    });
+  }
+  function obsPanel(mode){
+    observer({
+      target: document.querySelector(`.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2)`),
+      check: false,
+      name: 'comments panel',
+      mode: mode,
+      cfg: {attributes: false, childList: true, subtree: false},
+      func: (item) => {
+        if(!item.nodeName.match(/DIV/)) return;
+        // if(!item.querySelector(`a`)) return;
+        // let arr = item.querySelectorAll(`a`);
+        if(mainSettings['obs comments panel']['is active']){
+          if(!obs.chat) obs.chat = document.querySelector(`.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2)`).children;
+          for(let i = 0; i < obs.chat.length; i++){
+            // arr[i].classList.add('commentBlockedLink');
+            for(let a = 0, links = obs.chat[i].querySelectorAll(`a`); a < links.length; a++){
+              // if(a === 2) links[a].classList.add('commentBlockedText');
+              if(mainSettings['obs comments panel']['block text'] && obs.commentsTextFilter){
+                if(a === 2){
+                  if(links[2].textContent.trim().match(obs.commentsTextFilter)){
+                    links[2].classList.add('commentBlockedText');
+                  }
+                }
+              }
+              if(mainSettings['obs comments panel']['block links'] && obs.commentsLinkFilter){
+                if(a === 3){
+                  if(links[3].textContent.trim().match(obs.commentsLinkFilter)){
+                    links[3].classList.add('commentBlockedLink');
+                  }
+                }
+              }
+            }
+          }
+        }
+        // arr[3].classList.add('commentBlockedLink');
+        // if(mainSettings['obs comments panel']['is active']){
+        //   if(mainSettings['obs comments panel']['block links'] && arr[3] && obs.commentsLinkFilter){
+        //     // if(arr[3].children[0]) return;
+        //     // if(!arr[3].title) return;
+        //     // console.log(arr[3]);
+        //     // arr[3].textContent = 'Edited';
+        //     if(arr[3].textContent.trim().match(obs.commentsLinkFilter)){
+        //       arr[3].classList.add('commentBlockedLink');
+        //       // arr[3].title = 'Edited';
+        //     }
+        //     // if(!arr[3].textContent.trim().match(obs.commentsLinkFilter)){
+        //     //   arr[3].classList.remove('commentBlockedLink');
+        //     // }
+        //   }
+        //   if(mainSettings['obs comments panel']['block text'] && arr[2] && obs.commentsTextFilter){
+        //     if(arr[2].textContent.trim().match(obs.commentsTextFilter)){
+        //       arr[2].classList.add('commentBlockedText');
+        //     }
+        //   }
+        //   // if(mainSettings['obs comments']['block text'] && arr[2] && obs.commentsTextFilter){
+        //   //   if(arr[2].textContent.trim().match(obs.commentsTextFilter)) arr[2].textContent = '';
+        //   // }
+        // }
+        // console.log(`${arr[3] ? ('LINK: '+arr[3].textContent.trim()) : ''}${arr[2] ? ('\nMSG: '+arr[2].textContent.trim()) : ''}`);
+      }
+    });
+  }
+
   let initCfg = {
     storeName: 'DTF feeds',
     storeDesc: 'Настройки скрипта DTF feeds',
@@ -3593,32 +3703,9 @@ function mergeSettings(def, sav){
             checked: mainSettings['working mode']['type'] === 'obs' ? true : '',
             text: 'Обсервер фидов',
             value: 'obs'
-          },
-          {
-            type: 'radio',
-            name: 'type',
-            checked: mainSettings['working mode']['type'] === 'panel and obs' ? true : '',
-            text: 'Панель и обсервер фидов',
-            value: 'mid'
           }
         ]
       });
-      // this.obs = new Field({
-      //   path: form,
-      //   groupName: 'observers',
-      //   legend: `Обсерверы`,
-      //   style: `display: grid;
-      //   grid-template-columns: repeat(1, max-content);
-      //   width: 100%;`,
-      //   inputs: [
-      //     {
-      //       type: 'checkbox',
-      //       name: 'activate feeds observer',
-      //       checked: mainSettings['observers']['activate feeds observer'],
-      //       text: 'Активировать обсервер фидов'
-      //     }
-      //   ]
-      // });
       this.whereReact = new Field({
         path: form,
         groupName: 'where to react',
@@ -4298,25 +4385,25 @@ function mergeSettings(def, sav){
       });
       this.commentsObs = new Field({
         path: form,
-        groupName: 'obs comments',
+        groupName: 'obs comments panel',
         legend: `Обсервер комментариев боковой панели`,
         inputs: [
           {
             type: 'checkbox',
             name: 'is active',
-            checked: mainSettings['obs comments']['is active'],
+            checked: mainSettings['obs comments panel']['is active'],
             text: 'Активировать обсервер'
           },
           {
             type: 'checkbox',
             name: 'block links',
-            checked: mainSettings['obs comments']['block links'],
+            checked: mainSettings['obs comments panel']['block links'],
             text: 'Блокировать ссылки'
           },
           {
             type: 'checkbox',
             name: 'block text',
-            checked: mainSettings['obs comments']['block text'],
+            checked: mainSettings['obs comments panel']['block text'],
             text: 'Блокировать текст'
           }
         ]
@@ -4344,7 +4431,66 @@ function mergeSettings(def, sav){
         onblur: (e) => {
           e.target.parentNode.setAttribute('string', e.target.textContent);
         },
-        target: mainSettings['obs comments']['link words'],
+        target: mainSettings['obs comments panel']['link words'],
+        onkeydown: (e) => {
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            this.li = new Li({
+              path: e.target.parentNode.parentNode,
+              editable: true,
+              valueName: 'string',
+              onblur: (e) => {
+                e.target.parentNode.setAttribute('string', e.target.textContent);
+              },
+              buttons: (e) => {
+                new Button({
+                  path: e,
+                  text: '❌',
+                  onclick: () => {
+                    if(e.parentNode.parentNode.children.length > 1) e.parentNode.remove();
+                    else{
+                      e.parentNode.children[0].textContent = '';
+                      e.parentNode.removeAttribute('string');
+                    }
+                  }
+                });
+              }
+            });
+            this.range = document.createRange();
+            this.sel = window.getSelection();
+
+            this.range.setStart(this.li.children[0], 0);
+            this.range.collapse(true);
+
+            this.sel.removeAllRanges();
+            this.sel.addRange(this.range);
+          }
+        }
+      });
+      new Ul({
+        path: this.commentsObs,
+        cName: 'itemsList view fullHor',
+        name: 'text words',
+        valueName: 'string',
+        text: 'Regex фильтр текста комментариев',
+        editable: true,
+        buttons: (q) => {
+          new Button({
+            path: q,
+            text: '❌',
+            onclick: () => {
+              if(q.parentNode.parentNode.children.length > 1) q.parentNode.remove();
+              else{
+                q.parentNode.children[0].textContent = '';
+                q.parentNode.removeAttribute('string');
+              }
+            }
+          })
+        },
+        onblur: (e) => {
+          e.target.parentNode.setAttribute('string', e.target.textContent);
+        },
+        target: mainSettings['obs comments panel']['text words'],
         onkeydown: (e) => {
           if(e.key === 'Enter'){
             e.preventDefault();
@@ -4386,74 +4532,53 @@ function mergeSettings(def, sav){
         console.log(`First run`);
         if(mainSettings['where to react'][getPageType(document.location.href)]){
           console.log('[Activation]', getPageType(document.location.href));
-          if(mainSettings['working mode']['type'].match(/panel$/)){
+          if(mainSettings['working mode']['type'] === 'panel'){
+            console.log(`[Mode] режим панели`);
             new FeedGroups();
             feedsSearch();
           }else
-          if(mainSettings['working mode']['type'].match(/obs$|panel and obs/)){
+          if(mainSettings['working mode']['type'] === 'obs'){
+            console.log(`[Mode] режим обсервера`);
             new TwinGroup();
             feedsSearch();
             if(obs.feeds){
-              obs.feeds.disconnect();
-              obs.feeds.observe(document.querySelector(`div[class=feed] div[class=feed__container]`), {attributes: true, childList: true, subtree: true});
+              obsFeeds('restart');
             }else{
-              obsRun();
+              obsFeeds('start');
             }
           }
-          if(mainSettings['obs comments']['is active']){
-            if(obs.comments){
-              obs.comments.disconnect();
-              obs.feeds.observe(
-                document.querySelector(`.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2)`),
-                {attributes: false, childList: true, subtree: false}
-              );
-            }else{
-              if(mainSettings['obs comments']['link words'].length > 0){
-                try {
-                  obs.commentsLinkFilter = new RegExp(mainSettings['obs comments']['link words'].join('|'), 'mi');
-                } catch (err) {
-                  new Alert({
-                    alert: true,
-                    type: 'RegExp фильтр боковой панели комментариев',
-                    text: 'Ошибка фильтра! Вы ошиблись и ввели неверные слова/фразы/RegExp',
-                    timer: 10000
-                  })
-                }
-                // obs.commentsTextFilter = new RegExp(mainSettings['obs comments']['words'].join('|'), 'mi');
+        }
+        if(mainSettings['obs comments panel']['is active']){
+          if(obs['comments panel']){
+           obsPanel('restart');
+          }else{
+            if(mainSettings['obs comments panel']['link words'].length > 0){
+              try {
+                obs.commentsLinkFilter = new RegExp(mainSettings['obs comments panel']['link words'].join('|'), 'mi');
+              } catch (err) {
+                new Alert({
+                  alert: true,
+                  type: 'RegExp фильтр',
+                  text: 'Ошибка фильтра! Вы написали неверные выражения в фильтре ссылок панели комментариев.',
+                  timer: 10000
+                })
               }
-              console.log('Comments obs link filter ', obs.commentsLinkFilter);
-              obs.comments = observer({
-                target: document.querySelector(`.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2)`),
-                msg: '[OBS panel comments] фильтр активирован',
-                mode: {attributes: false, childList: true, subtree: false},
-                func: (item) => {
-                  if(!item.nodeName.match(/DIV/)) return;
-                  if(!item.querySelector(`a`)) return;
-                  let arr = item.querySelectorAll(`a`);
-                  if(mainSettings['obs comments']['is active']){
-                    if(mainSettings['obs comments']['block links'] && arr[3] && obs.commentsLinkFilter){
-                      // if(arr[3].children[0]) return;
-                      // if(!arr[3].title) return;
-                      // console.log(arr[3]);
-                      // arr[3].textContent = 'Edited';
-                      if(arr[3].textContent.trim().match(obs.commentsLinkFilter)){
-                        // console.log('MATCH1');
-                        arr[3].classList.add('commentBlockedByLink');
-                        // arr[3].title = 'Edited';
-                      }else
-                      if(!arr[3].textContent.trim().match(obs.commentsLinksFilter)){
-                        // console.log('MATCH2');
-                        arr[3].classList.remove('commentBlockedByLink');
-                      }
-                    }
-                    // if(mainSettings['obs comments']['block text'] && arr[2] && obs.commentsTextFilter){
-                    //   if(arr[2].textContent.trim().match(obs.commentsTextFilter)) arr[2].textContent = '';
-                    // }
-                  }
-                  // console.log(`${arr[3] ? ('LINK: '+arr[3].textContent.trim()) : ''}${arr[2] ? ('\nMSG: '+arr[2].textContent.trim()) : ''}`);
-                }
-              });
             }
+            if(mainSettings['obs comments panel']['text words'].length > 0){
+              try {
+                obs.commentsTextFilter = new RegExp(mainSettings['obs comments panel']['text words'].join('|'), 'mi');
+              } catch (err) {
+                new Alert({
+                  alert: true,
+                  type: 'RegExp фильтр',
+                  text: 'Ошибка фильтра! Вы написали неверные выражения в фильтре текста панели комментариев.',
+                  timer: 10000
+                })
+              }
+            }
+            console.log('Comments obs link filter ', obs.commentsLinkFilter);
+            console.log('Comments obs text filter ', obs.commentsTextFilter);
+            obsPanel('start');
           }
         }
         // if(document.location.href.match(filterBuilder())){
@@ -4491,43 +4616,6 @@ function mergeSettings(def, sav){
       mainSettings['where to react']['subsites'] ? '' : '',
       mainSettings['where to react']['topics'] ? `[^/]+/[0-9]+-[^]+$` : ''
       ].filter(i => i).join('|')}`);
-  }
-  function obsRun(){
-    obs.feeds = observer({
-      target: document.querySelector(`div[class=feed] div[class=feed__container]`),
-      check: true,
-      search: /feed__container/,
-      msg: '[OBS feeds] фильтр активирован',
-      func: (item) => {
-        // console.log('OBS ', item);
-        if(!item.classList.value > 0) return;
-        if(item.classList.value.match(/feed__chunk/)){
-          feedsSearch();
-          // for(let i = 0, arr = item.children; i < arr.length; i++){
-          //   // console.log('OBS', arr[i].children[0].getAttribute('data-content-id'));
-          //   new FeedActions(arr[i].querySelector(`div[class=content-header__info]`), arr[i]);
-          //   if(mainSettings.data.watched.includes(arr[i].children[0].getAttribute('data-content-id').toString())){
-          //     console.log('I see watched, desu!', arr[i].children[0].getAttribute('data-content-id'));
-          //     arr[i].classList.add('watchedFeed');
-          //   }
-          //   if(mainSettings['working mode']['show panel']){
-          //     if(mainSettings['what to group']['blogs']){
-          //       new SubGroup(
-          //         document.getElementById('dtf-feedGroups').children[2].children[1],
-          //         arr[i].querySelector(`div[class=content-header__info]`).children[0].children[0].children[0].children[0].getAttribute('data-image-src'),
-          //         arr[i].querySelector(`div[class=content-header__info]`).children[0].children[0].children[1].textContent, arr[i]
-          //       );
-          //     }else{
-          //       document.getElementById('dtf-feedGroups').children[2].children[1].appendChild(arr[i]);
-          //     }
-          //   }else
-          //   if(mainSettings['observers']['activate feeds observer']){
-          //     document.getElementById('dtf-feedGroups').appendChild(arr[i]);
-          //   }
-          // }
-        }
-      }
-    });
   }
   function getPageType(url){
     return url.replace(/https:\/\/dtf\.ru\/([^]+)/, (d, text) => {
@@ -4598,54 +4686,55 @@ function mergeSettings(def, sav){
       console.log('ALDUIN');
       if(mainSettings['where to react'][getPageType(document.location.href)]){
       // if(document.location.href.match(filterBuilder())){
-        if(mainSettings['working mode']['type'].match(/panel$/)){
+        if(mainSettings['working mode']['type'] === 'panel'){
           console.log(`[Mode] режим панели`);
           new FeedGroups();
           feedsSearch();
         }else
-        if(mainSettings['working mode']['type'].match(/obs$|panel and obs/)){
-          console.log(`[Mode] режим обсервера и/или панели`);
+        if(mainSettings['working mode']['type'] === 'obs'){
+          console.log(`[Mode] режим обсервера`);
           new TwinGroup();
           feedsSearch();
+          // if(getPageType(document.location.href) === 'topics'){
+          //   console.log('TOPICS');
+          //   new TwinGroup();
+          //   feedsSearch();
+          // }else{
           if(obs.feeds){
-            obs.feeds.disconnect();
-            obs.feeds.observe(document.querySelector(`div[class=feed] div[class=feed__container]`), {attributes: true, childList: true, subtree: true});
+            obsFeeds('restart');
           }else{
-            obsRun();
+            obsFeeds('start');
           }
         }
-        if(mainSettings['obs comments']['is active']){
-          if(obs.comments){
-            obs.comments.disconnect();
-            obs.feeds.observe(
-              document.querySelector(`.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2)`),
-              {attributes: false, childList: true, subtree: false}
-            );
+        if(mainSettings['obs comments panel']['is active']){
+          if(obs['comments panel']){
+            obsPanel('restart');
           }else{
-            if(mainSettings['obs comments']['link words'].length > 0){
-              obs.commentsLinkFilter = new RegExp(mainSettings['obs comments']['link words'].join('|'), 'mi');
-            }
-            console.log('Comments obs link filter ', obs.commentsLinkFilter);
-            obs.comments = observer({
-              target: document.querySelector(`.layout__right-column>:nth-child(1)>:nth-child(1)>:nth-child(2)>:nth-child(1)>:nth-child(2)`),
-              msg: '[OBS panel comments] фильтр активирован',
-              mode: {attributes: false, childList: true, subtree: false},
-              func: (item) => {
-                if(!item.nodeName.match(/DIV/)) return;
-                if(!item.querySelector(`a`)) return;
-                let arr = item.querySelectorAll(`a`);
-                if(mainSettings['obs comments']['is active']){
-                  if(mainSettings['obs comments']['block links'] && arr[3] && obs.commentsLinkFilter){
-                    if(arr[3].textContent.trim().match(obs.commentsLinkFilter)){
-                      arr[3].classList.add('commentBlockedByLink');
-                    }else
-                    if(!arr[3].textContent.trim().match(obs.commentsLinksFilter)){
-                      arr[3].classList.remove('commentBlockedByLink');
-                    }
-                  }
-                }
+            if(mainSettings['obs comments panel']['link words'].length > 0){
+              try {
+                obs.commentsLinkFilter = new RegExp(mainSettings['obs comments panel']['link words'].join('|'), 'mi');
+              } catch (err) {
+                new Alerter({
+                  alert: true,
+                  type: 'RegExp',
+                  text: 'Ошибка фильтра! Вы написали неверные выражения в фильтре ссылок панели комментариев.',
+                  timer: 10000
+                })
               }
-            });
+            }
+            if(mainSettings['obs comments panel']['text words'].length > 0){
+              try {
+                obs.commentsTextFilter = new RegExp(mainSettings['obs comments panel']['text words'].join('|'), 'mi');
+              } catch (err) {
+                new Alert({
+                  alert: true,
+                  type: 'RegExp фильтр',
+                  text: 'Ошибка фильтра! Вы написали неверные выражения в фильтре текста панели комментариев.',
+                  timer: 10000
+                })
+              }
+            }
+            obsPanel('start');
           }
         }
       }
